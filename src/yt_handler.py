@@ -108,7 +108,47 @@ class YTDownloader:
                 size = int(bitrate * duration * 128)
         
         return size
-    
+
+    def search(self, query: str) -> Dict[str, Any]:
+        """Search YouTube for videos matching a query
+
+        Args:
+            query: Search query string (e.g., "artist - song name")
+
+        Returns:
+            Dictionary with search results including url, title, duration
+        """
+        try:
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'extract_flat': True,
+                'skip_download': True,
+                'extractor_args': { 'youtube': { 'player_client': ['default', '-tv_simply'], }, },
+            }
+
+            search_query = f"ytsearch1:{query}"
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                result = ydl.extract_info(search_query, download=False)
+
+            if result and 'entries' in result and len(result['entries']) > 0:
+                video = result['entries'][0]
+                video_url = f"https://www.youtube.com/watch?v={video['id']}"
+
+                return {
+                    'success': True,
+                    'url': video_url,
+                    'title': video.get('title', 'Unknown'),
+                    'duration': video.get('duration', 0),
+                    'id': video.get('id')
+                }
+            else:
+                return {'success': False, 'message': 'No videos found'}
+        except Exception as e:
+            print(f"Error in search: {str(e)}")
+            return {'success': False, 'message': str(e)}
+
     def download_info(self, task_id: str):
         try:
             tasks = Storage.load_tasks()

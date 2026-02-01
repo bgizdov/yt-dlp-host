@@ -16,6 +16,7 @@ This API offers a range of endpoints for downloading YouTube videos, retrieving 
    - [Get Live Video (`/get_live_video`)](#get-live-video-get_live_video)
    - [Get Live Audio (`/get_live_audio`)](#get-live-audio-get_live_audio)
    - [Get Info (`/get_info`)](#get-info-get_info)
+   - [Search YouTube Videos (`/search`)](#search-youtube-videos-search)
    - [Create API Key (`/create_key`)](#create-api-key-create_key)
    - [Delete API Key (`/delete_key/<name>`)](#delete-api-key-delete_keyname)
    - [List API Keys (`/get_keys`)](#list-api-keys-get_keys)
@@ -236,6 +237,48 @@ Retrieves information about the video from the specified URL.
   }
   ```
 
+### Search YouTube Videos (`/search`)
+
+Search YouTube for videos matching a query string and return the first result with metadata.
+
+- **Method:** POST
+- **URL:** `/search`
+- **Headers:**
+  - `X-API-Key`: Your API key
+  - `Content-Type`: application/json
+- **Body:**
+  ```json
+  {
+      "query": "big buck bunny"
+  }
+  ```
+- **Parameters:**
+  - `query` (required): Search query string. Can be any text like "artist - song name".
+- **Permissions:** Requires the `search` permission.
+- **Response:**
+  ```json
+  {
+      "success": true,
+      "url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "title": "Big Buck Bunny",
+      "duration": 596,
+      "id": "aqz-KE-bpKQ"
+  }
+  ```
+- **Response Fields:**
+  - `success` (boolean): `true` if search found results, `false` otherwise
+  - `url` (string): Full YouTube URL to the video
+  - `title` (string): Video title from YouTube metadata
+  - `duration` (integer): Duration in seconds
+  - `id` (string): YouTube video ID
+- **Error Response:**
+  ```json
+  {
+      "success": false,
+      "message": "No videos found"
+  }
+  ```
+
 ### Create API Key (`/create_key`)
 
 Creates a new API key with the specified permissions.
@@ -249,7 +292,7 @@ Creates a new API key with the specified permissions.
   ```json
   {
       "name": "user_key",
-      "permissions": ["get_video", "get_audio", "get_live_video", "get_live_audio", "get_info"]
+      "permissions": ["get_video", "get_audio", "get_live_video", "get_live_audio", "get_info", "search"]
   }
   ```
 - **Parameters:**
@@ -296,14 +339,14 @@ Retrieves a list of all existing API keys.
   {
       "admin": {
           "key": "admin_api_key_here",
-          "permissions": ["create_key", "delete_key", "get_key", "get_keys", "get_video", "get_audio", "get_live_video", "get_live_audio", "get_info"],
+          "permissions": ["create_key", "delete_key", "get_key", "get_keys", "get_video", "get_audio", "get_live_video", "get_live_audio", "get_info", "search"],
           "memory_quota": 5368709120,
           "memory_usage": [],
           "last_access": "2024-01-01T12:00:00"
       },
       "user_key": {
           "key": "user_api_key_here",
-          "permissions": ["get_video", "get_audio", "get_live_video", "get_live_audio", "get_info"],
+          "permissions": ["get_video", "get_audio", "get_live_video", "get_live_audio", "get_info", "search"],
           "memory_quota": 5368709120,
           "memory_usage": [],
           "last_access": "2024-01-01T12:00:00"
