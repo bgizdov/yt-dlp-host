@@ -72,6 +72,18 @@ def get_live_video():
 def get_live_audio():
     return create_task(TaskType.GET_LIVE_AUDIO, request.json)
 
+@app.route('/search', methods=['POST'])
+@require_permission('search')
+def search():
+    data = request.json
+    query = data.get('query') if data else None
+
+    if not query:
+        return jsonify({'success': False, 'message': 'Query is required'}), 400
+
+    result = yt_handler.downloader.search(query)
+    return jsonify(result)
+
 @app.route('/status/<task_id>', methods=['GET'])
 def status(task_id: str):
     tasks = Storage.load_tasks()
