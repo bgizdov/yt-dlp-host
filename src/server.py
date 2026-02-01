@@ -2,7 +2,6 @@ import os
 import json
 import random
 import string
-from urllib.parse import urlparse
 from flask import Flask, request, jsonify, send_from_directory
 
 from src.storage import Storage
@@ -18,21 +17,9 @@ app.json.sort_keys = False
 def generate_task_id(length: int = 16) -> str:
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-def is_valid_url(url: str) -> bool:
-    """Validate if string is a valid URL"""
-    try:
-        result = urlparse(url)
-        return all([result.scheme, result.netloc])
-    except:
-        return False
-
 def create_task(task_type: TaskType, data: dict) -> dict:
     if not data.get('url'):
         return {'status': 'error', 'message': 'URL is required'}, 400
-
-    url = data.get('url')
-    if not is_valid_url(url):
-        return {'status': 'error', 'message': f'Invalid URL: {url}. Must include scheme (http/https) and domain'}, 400
     
     task_id = generate_task_id()
     api_key = request.headers.get('X-API-Key')
