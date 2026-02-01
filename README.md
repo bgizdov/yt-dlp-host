@@ -92,6 +92,7 @@ Initiates a video download task from the specified URL.
   - `video_format` (optional): The [format](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#format-selection) of the video. Default is "bestvideo".
   - `audio_format` (optional): The [format](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#format-selection) of the audio. Default is "bestaudio". To download video without audio, set this to `null` or `none`.
   - `output_format` (optional): The output container format (mp4, mkv, webm, etc.). Default is "mp4".
+  - `output_filename` (optional): Custom filename for the downloaded file. When provided, file is saved to `/app/downloads/{output_filename}.{ext}` instead of `/app/downloads/{task_id}/`. Useful for organizing downloads with custom names.
   - `start_time` (optional): Starting point for video fragment in HH:MM:SS format or seconds as number.
   - `end_time` (optional): Ending point for video fragment in HH:MM:SS format or seconds as number.
   - `force_keyframes` (optional): If true, ensures precise cutting but slower processing. If false, faster but less precise cutting. Default is false.
@@ -128,6 +129,7 @@ Initiates an audio download task from the specified URL.
   - `url` (required): The URL of the audio to be downloaded.
   - `audio_format` (optional): The [format](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#format-selection) of the audio. Default is "bestaudio".
   - `output_format` (optional): The output audio format (mp3, m4a, opus, etc.). Default is original format.
+  - `output_filename` (optional): Custom filename for the downloaded file. When provided, file is saved to `/app/downloads/{output_filename}.{ext}` instead of `/app/downloads/{task_id}/`. Useful for organizing downloads with custom names.
   - `start_time` (optional): Starting point for audio fragment in HH:MM:SS format or seconds as number.
   - `end_time` (optional): Ending point for audio fragment in HH:MM:SS format or seconds as number.
   - `force_keyframes` (optional): If true, ensures precise cutting but slower processing. If false, faster but less precise cutting. Default is false.
@@ -167,6 +169,7 @@ Initiates a live video download task from the specified URL.
   - `video_format` (optional): The [format](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#format-selection) of the video. Default is "bestvideo".
   - `audio_format` (optional): The [format](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#format-selection) of the audio. Default is "bestaudio".
   - `output_format` (optional): The output container format (mp4, mkv, webm, etc.). Default is "mp4".
+  - `output_filename` (optional): Custom filename for the downloaded file. When provided, file is saved to `/app/downloads/{output_filename}.{ext}` instead of `/app/downloads/{task_id}/`. Useful for organizing downloads with custom names.
 - **Permissions:** Requires the `get_live_video` permission.
 - **Response:**
   ```json
@@ -199,6 +202,7 @@ Initiates a live audio download task from the specified URL.
   - `url` (required): The URL of the live stream to be downloaded.
   - `audio_format` (optional): The [format](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#format-selection) of the audio. Default is "bestaudio".
   - `output_format` (optional): The output audio format (mp3, m4a, opus, etc.). Default is original format.
+  - `output_filename` (optional): Custom filename for the downloaded file. When provided, file is saved to `/app/downloads/{output_filename}.{ext}` instead of `/app/downloads/{task_id}/`. Useful for organizing downloads with custom names.
   - `start` (optional): The starting point in seconds for the stream recording. Default is 0.
   - `duration` (required): The length of the recording in seconds from the start point.
 - **Permissions:** Requires the `get_live_audio` permission.
@@ -227,6 +231,7 @@ Retrieves information about the video from the specified URL.
   ```
 - **Parameters:**
   - `url` (required): The URL of the video to retrieve information about.
+  - `output_filename` (optional): Custom filename for the info file. When provided, file is saved to `/app/downloads/{output_filename}.json` instead of `/app/downloads/{task_id}/info.json`. Useful for organizing information files with custom names.
 - **Permissions:** Requires the `get_info` permission.
 - **Response:**
   ```json
