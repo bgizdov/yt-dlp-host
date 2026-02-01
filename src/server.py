@@ -37,7 +37,8 @@ def create_task(task_type: TaskType, data: dict) -> dict:
         force_keyframes=data.get('force_keyframes', False),
         start=data.get('start', 0),
         duration=data.get('duration'),
-        output_format=data.get('output_format')
+        output_format=data.get('output_format'),
+        filename=data.get('filename')
     )
     
     tasks = Storage.load_tasks()

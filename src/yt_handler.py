@@ -114,30 +114,47 @@ class YTDownloader:
             tasks = Storage.load_tasks()
             task = tasks[task_id]
             self._update_task(task_id, status=TaskStatus.PROCESSING.value)
-            
-            download_path = self._get_task_dir(task_id)
+
+            has_custom_filename = task.get('filename')
+            if has_custom_filename:
+                # Save directly to /app/downloads/ with custom filename
+                download_path = storage.DOWNLOAD_DIR
+                info_filename = f"{task.get('filename')}.json"
+            else:
+                # Save to task directory (original behavior)
+                download_path = self._get_task_dir(task_id)
+                info_filename = 'info.json'
+
             os.makedirs(download_path, exist_ok=True)
-            
+
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
                 'extract_flat': True,
                 'skip_download': True
             }
-            
+
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(task['url'], download=False)
-            
-            info_file = os.path.join(download_path, 'info.json')
+
+            info_file = os.path.join(download_path, info_filename)
             with open(info_file, 'w') as f:
                 json.dump(info, f)
-            
-            self._update_task(
-                task_id,
-                status=TaskStatus.COMPLETED.value,
-                completed_time=datetime.now().isoformat(),
-                file=f'/files/{task_id}/info.json'
-            )
+
+            if has_custom_filename:
+                self._update_task(
+                    task_id,
+                    status=TaskStatus.COMPLETED.value,
+                    completed_time=datetime.now().isoformat(),
+                    file=f'/files/{info_filename}'
+                )
+            else:
+                self._update_task(
+                    task_id,
+                    status=TaskStatus.COMPLETED.value,
+                    completed_time=datetime.now().isoformat(),
+                    file=f'/files/{task_id}/info.json'
+                )
         except Exception as e:
             self._handle_error(task_id, e)
     
@@ -146,7 +163,7 @@ class YTDownloader:
             tasks = Storage.load_tasks()
             task = tasks[task_id]
             self._update_task(task_id, status=TaskStatus.PROCESSING.value)
-            
+
             # Check memory quota
             is_video = task['task_type'] in ['get_video', 'get_live_video']
             total_size = self.estimate_size(
@@ -154,34 +171,54 @@ class YTDownloader:
                 task.get('video_format') if is_video else None,
                 task.get('audio_format')
             )
-            
+
             if total_size <= 0:
                 raise Exception("Could not estimate file size")
-            
+
             keys = Storage.load_keys()
             api_key = keys[task['key_name']]['key']
             memory_manager.check_and_update_quota(api_key, total_size, task_id)
-            
+
             # Prepare download
-            download_path = self._get_task_dir(task_id)
+            has_custom_filename = task.get('filename')
+            if has_custom_filename:
+                # Save directly to /app/downloads/ with custom filename
+                download_path = storage.DOWNLOAD_DIR
+            else:
+                # Save to task directory (original behavior)
+                download_path = self._get_task_dir(task_id)
+
             os.makedirs(download_path, exist_ok=True)
-            
+
             # Configure yt-dlp
             ydl_opts = self._build_ydl_options(task, download_path)
-            
+
             # Download
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([task['url']])
-            
+
             # Update task
-            files = os.listdir(download_path)
-            if files:
-                self._update_task(
-                    task_id,
-                    status=TaskStatus.COMPLETED.value,
-                    completed_time=datetime.now().isoformat(),
-                    file=f'/files/{task_id}/{files[0]}'
-                )
+            if has_custom_filename:
+                # For custom filename, find the actual downloaded file
+                custom_name = task.get('filename')
+                matching_files = [f for f in os.listdir(download_path) if f.startswith(custom_name)]
+                if matching_files:
+                    self._update_task(
+                        task_id,
+                        status=TaskStatus.COMPLETED.value,
+                        completed_time=datetime.now().isoformat(),
+                        file=f'/files/{matching_files[0]}'
+                    )
+            else:
+                # Original behavior for task directory
+                files = os.listdir(download_path)
+                if files:
+                    self._update_task(
+                        task_id,
+                        status=TaskStatus.COMPLETED.value,
+                        completed_time=datetime.now().isoformat(),
+                        file=f'/files/{task_id}/{files[0]}'
+                    )
         except Exception as e:
             self._handle_error(task_id, e)
     
@@ -190,6 +227,7 @@ class YTDownloader:
         is_live = 'live' in task['task_type']
         output_format = task.get('output_format')
         audio_format = task.get('audio_format')
+        filename = task.get('filename')
 
         if is_video:
             video_format = task.get('video_format', 'bestvideo')
@@ -197,10 +235,16 @@ class YTDownloader:
                 format_option = f"{video_format}/bestvideo"
             else:
                 format_option = f"{video_format}+{audio_format}/best"
-            output_name = 'live_video.%(ext)s' if is_live else 'video.%(ext)s'
+            if filename:
+                output_name = f"{filename}.%(ext)s"
+            else:
+                output_name = 'live_video.%(ext)s' if is_live else 'video.%(ext)s'
         else:
             format_option = f"{task.get('audio_format', 'bestaudio')}/bestaudio"
-            output_name = 'live_audio.%(ext)s' if is_live else 'audio.%(ext)s'
+            if filename:
+                output_name = f"{filename}.%(ext)s"
+            else:
+                output_name = 'live_audio.%(ext)s' if is_live else 'audio.%(ext)s'
         
         opts = {
             'format': format_option,
