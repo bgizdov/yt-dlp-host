@@ -11,6 +11,7 @@ import yt_dlp
 from yt_dlp.utils import download_range_func
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, TIT2, TPE1, ID3NoHeaderError
+import mutagen
 
 from src.storage import Storage
 from src.auth import memory_manager
@@ -18,10 +19,15 @@ from src.models import TaskStatus, TaskType
 from config import storage, memory
 from config import task as task_config
 
+# Log mutagen version on startup
+print(f"[STARTUP] Mutagen version: {mutagen.version_string}")
+print(f"[STARTUP] ID3 tagging is available and ready")
+
 class YTDownloader:
     def __init__(self):
         self.executor = ThreadPoolExecutor(max_workers=task_config.MAX_WORKERS)
         self._ensure_download_dir()
+        print(f"[STARTUP] YTDownloader initialized with ID3 tagging support")
     
     def _ensure_download_dir(self):
         os.makedirs(storage.DOWNLOAD_DIR, exist_ok=True)
@@ -267,10 +273,14 @@ class YTDownloader:
         try:
             tasks = Storage.load_tasks()
             task = tasks[task_id]
+            print(f"[DOWNLOAD] Starting download_media for task: {task_id}")
+            print(f"[DOWNLOAD] Task type: {task.get('task_type')}")
+            print(f"[DOWNLOAD] URL: {task.get('url')}")
             self._update_task(task_id, status=TaskStatus.PROCESSING.value)
 
             # Check memory quota
             is_video = task['task_type'] in ['get_video', 'get_live_video']
+            print(f"[DOWNLOAD] is_video={is_video}")
             total_size = self.estimate_size(
                 task['url'],
                 task.get('video_format') if is_video else None,
