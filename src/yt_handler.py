@@ -305,19 +305,34 @@ class YTDownloader:
 
             # Find downloaded file and update ID3 tags for audio files
             downloaded_file = None
+            print(f"[DEBUG] Searching for downloaded file in: {download_path}")
+            print(f"[DEBUG] has_custom_filename: {has_custom_filename}")
+            print(f"[DEBUG] is_video: {is_video}")
+
             if has_custom_filename:
                 custom_name = task.get('output_filename')
-                matching_files = [f for f in os.listdir(download_path) if f.startswith(custom_name)]
+                print(f"[DEBUG] custom_name: {custom_name}")
+                all_files = os.listdir(download_path)
+                print(f"[DEBUG] Files in directory: {all_files}")
+                matching_files = [f for f in all_files if f.startswith(custom_name)]
+                print(f"[DEBUG] Matching files: {matching_files}")
                 if matching_files:
                     downloaded_file = os.path.join(download_path, matching_files[0])
+                    print(f"[DEBUG] Selected file: {downloaded_file}")
             else:
                 files = os.listdir(download_path)
+                print(f"[DEBUG] Files in directory: {files}")
                 if files:
                     downloaded_file = os.path.join(download_path, files[0])
+                    print(f"[DEBUG] Selected file: {downloaded_file}")
 
             # Update ID3 tags for audio downloads (MP3 format)
+            print(f"[DEBUG] About to check ID3 conditions: downloaded_file={downloaded_file}, is_video={is_video}")
             if downloaded_file and not is_video:
+                print(f"[DEBUG] Calling _update_mp3_id3_tags with title: {video_title}")
                 self._update_mp3_id3_tags(downloaded_file, video_title)
+            else:
+                print(f"[DEBUG] Skipping ID3 update - downloaded_file={downloaded_file}, is_video={is_video}")
 
             # Update task
             if has_custom_filename:
