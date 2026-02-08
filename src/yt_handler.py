@@ -34,8 +34,17 @@ class YTDownloader:
             title: Video/audio title from YouTube
         """
         try:
+            print(f"[ID3] Processing file: {file_path}")
+            print(f"[ID3] Title: {title}")
+
+            # Check if file exists
+            if not os.path.exists(file_path):
+                print(f"[ID3] ERROR: File does not exist: {file_path}")
+                return
+
             # Check if file is MP3
             if not file_path.lower().endswith('.mp3'):
+                print(f"[ID3] Skipping non-MP3 file: {file_path}")
                 return
 
             # Try to load existing ID3 tags or create new ones
@@ -53,18 +62,32 @@ class YTDownloader:
                 artist = parts[0].strip()
                 track = parts[1].strip()
 
+                print(f"[ID3] Setting Artist: {artist}")
+                print(f"[ID3] Setting Track: {track}")
+
+                # Delete existing tags first to avoid duplicates
+                audio.tags.delall('TPE1')
+                audio.tags.delall('TIT2')
+
                 # Update artist and title tags
                 audio.tags.add(TPE1(encoding=3, text=artist))
                 audio.tags.add(TIT2(encoding=3, text=track))
             else:
+                print(f"[ID3] Setting Track only: {title}")
+
+                # Delete existing tags first
+                audio.tags.delall('TIT2')
+
                 # No artist separator found, just update title
                 audio.tags.add(TIT2(encoding=3, text=title))
 
             # Save the tags
             audio.save()
-            print(f"Updated ID3 tags for: {file_path}")
+            print(f"[ID3] ✓ Successfully updated ID3 tags for: {file_path}")
         except Exception as e:
-            print(f"Error updating ID3 tags for {file_path}: {str(e)}")
+            import traceback
+            print(f"[ID3] ERROR updating ID3 tags for {file_path}: {str(e)}")
+            print(f"[ID3] Traceback: {traceback.format_exc()}")
 
     def _get_task_dir(self, task_id: str) -> str:
         return os.path.join(storage.DOWNLOAD_DIR, task_id)
