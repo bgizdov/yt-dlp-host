@@ -9,6 +9,8 @@ from typing import Optional, Dict, Any
 
 import yt_dlp
 from yt_dlp.utils import download_range_func
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3, TIT2, TPE1, ID3NoHeaderError
 
 from src.storage import Storage
 from src.auth import memory_manager
@@ -23,7 +25,47 @@ class YTDownloader:
     
     def _ensure_download_dir(self):
         os.makedirs(storage.DOWNLOAD_DIR, exist_ok=True)
-    
+
+    def _update_mp3_id3_tags(self, file_path: str, title: str):
+        """Update MP3 ID3 tags based on title format 'artist - track'
+
+        Args:
+            file_path: Path to the MP3 file
+            title: Video/audio title from YouTube
+        """
+        try:
+            # Check if file is MP3
+            if not file_path.lower().endswith('.mp3'):
+                return
+
+            # Try to load existing ID3 tags or create new ones
+            try:
+                audio = MP3(file_path, ID3=ID3)
+                if audio.tags is None:
+                    audio.add_tags()
+            except ID3NoHeaderError:
+                audio = MP3(file_path)
+                audio.add_tags()
+
+            # Parse title for "artist - track" format
+            if ' - ' in title:
+                parts = title.split(' - ', 1)  # Split only on first " - "
+                artist = parts[0].strip()
+                track = parts[1].strip()
+
+                # Update artist and title tags
+                audio.tags.add(TPE1(encoding=3, text=artist))
+                audio.tags.add(TIT2(encoding=3, text=track))
+            else:
+                # No artist separator found, just update title
+                audio.tags.add(TIT2(encoding=3, text=title))
+
+            # Save the tags
+            audio.save()
+            print(f"Updated ID3 tags for: {file_path}")
+        except Exception as e:
+            print(f"Error updating ID3 tags for {file_path}: {str(e)}")
+
     def _get_task_dir(self, task_id: str) -> str:
         return os.path.join(storage.DOWNLOAD_DIR, task_id)
     
@@ -233,9 +275,26 @@ class YTDownloader:
             # Configure yt-dlp
             ydl_opts = self._build_ydl_options(task, download_path)
 
-            # Download
+            # Download and get video info
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([task['url']])
+                info = ydl.extract_info(task['url'], download=True)
+                video_title = info.get('title', '')
+
+            # Find downloaded file and update ID3 tags for audio files
+            downloaded_file = None
+            if has_custom_filename:
+                custom_name = task.get('output_filename')
+                matching_files = [f for f in os.listdir(download_path) if f.startswith(custom_name)]
+                if matching_files:
+                    downloaded_file = os.path.join(download_path, matching_files[0])
+            else:
+                files = os.listdir(download_path)
+                if files:
+                    downloaded_file = os.path.join(download_path, files[0])
+
+            # Update ID3 tags for audio downloads (MP3 format)
+            if downloaded_file and not is_video:
+                self._update_mp3_id3_tags(downloaded_file, video_title)
 
             # Update task
             if has_custom_filename:
