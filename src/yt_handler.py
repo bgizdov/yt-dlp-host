@@ -313,6 +313,9 @@ class YTDownloader:
                 info = ydl.extract_info(task['url'], download=True)
                 video_title = info.get('title', '')
 
+            print(f"[DEBUG] Download completed! Video title: {video_title}")
+            print(f"[DEBUG] Now processing ID3 tags...")
+
             # Find downloaded file and update ID3 tags for audio files
             downloaded_file = None
             print(f"[DEBUG] Searching for downloaded file in: {download_path}")
