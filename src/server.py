@@ -14,6 +14,11 @@ from src import yt_handler
 app = Flask(__name__)
 app.json.sort_keys = False
 
+@app.route('/health', methods=['GET'])
+def health():
+    """Health check endpoint for monitoring and testing"""
+    return jsonify({'status': 'ok', 'service': 'yt-dlp-host'}), 200
+
 def generate_task_id(length: int = 16) -> str:
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 

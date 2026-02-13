@@ -100,7 +100,7 @@ class TestDownloadAndValidateID3:
             'output_format': 'mp3'
         }
 
-        headers = {'Authorization': f'Bearer {api_key}'}
+        headers = {'X-API-Key': api_key}
 
         print(f"[E2E] Creating download task for: {task_payload['url']}")
         response = requests.post(

@@ -386,9 +386,17 @@ pytest --no-cov                    # Skip coverage for speed
 
 **Test Status:**
 - ✅ Unit Tests: 12/12 passing (100%)
-- ✅ Integration Tests: 1/3 passing (33%)
-- 🔄 E2E Tests: Configured, requires manual execution
+- ⚠️ Integration Tests: 1/3 passing (33%)
+- ✅ E2E Tests: 1/3 passing (2 skipped - manual tests)
 
 **Coverage:**
 - ✅ ID3 Function: 87.1% (exceeds 80% target)
 - ⚠️ Overall: 26.75% (needs improvement)
+
+**E2E Test Results (Actual Run):**
+- ✅ `test_download_audio_and_verify_id3_tags` - PASSED ✅
+  - Downloaded Rick Astley - Never Gonna Give You Up
+  - Verified TIT2: "Never Gonna Give You Up (Official Video) (4K Remaster)"
+  - Verified TPE1: "Rick Astley"
+  - Verified UTF-8 encoding
+  - Completed in 10.5 seconds
